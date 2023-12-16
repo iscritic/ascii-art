@@ -10,6 +10,19 @@ import (
 	"strings"
 )
 
+var colors = map[string]string{
+	"reset":  "\033[0m",
+	"black":  "\033[30m",
+	"red":    "\033[31m",
+	"green":  "\033[32m",
+	"yellow": "\033[33m",
+	"blue":   "\033[34m",
+	"purple": "\033[35m",
+	"cyan":   "\033[36m",
+	"white":  "\033[37m",
+	"orange": "\033[38;5;208m",
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		log.Fatalln("At least 2 arguments are required")
@@ -147,7 +160,7 @@ func GetAscii(text, data string) string {
 		for i := 0; i < 8; i++ {
 			for _, char := range subs {
 				if art, ok := table[char]; ok {
-					result += art[i]
+					result += colors["red"] + art[i] + colors["reset"]
 				}
 			}
 			result += "\n"
