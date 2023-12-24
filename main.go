@@ -38,9 +38,9 @@ func main() {
 		log.Fatalln("Invalid font")
 	}
 
-	output := GetAscii(arg, data)
+	output, maxlen := GetAscii(arg, data)
 
-	if isValidTerminal(output) {
+	if isValidTerminal(maxlen) {
 		log.Fatalln("Invalid terminal size")
 	}
 
@@ -142,7 +142,7 @@ func FontPicker() (string, error) {
 	return string(data), nil
 }
 
-func GetAscii(text, data string) string {
+func GetAscii(text, data string) (string, int) {
 	table := CreateMap(string(data))
 
 	text = strings.ReplaceAll(text, "\\n", "\n")
@@ -152,6 +152,7 @@ func GetAscii(text, data string) string {
 	var result string
 
 	for _, subs := range s {
+
 		if subs == "\n" {
 			result += "\n"
 			continue
@@ -160,17 +161,26 @@ func GetAscii(text, data string) string {
 		for i := 0; i < 8; i++ {
 			for _, char := range subs {
 				if art, ok := table[char]; ok {
-					result += colors["red"] + art[i] + colors["reset"]
+					result += art[i]
 				}
 			}
 			result += "\n"
 		}
 	}
 
-	return result
+	var maxlen int
+	arr := strings.Split(result, "\n")
+
+	for _, el := range arr {
+		if maxlen < len(el) {
+			maxlen = len(el)
+		}
+	}
+
+	return result, maxlen
 }
 
-func isValidTerminal(s string) bool {
+func isValidTerminal(maxlen int) bool {
 	cmd := exec.Command("stty", "size")
 	cmd.Stdin = os.Stdin
 	out, err := cmd.Output()
@@ -181,5 +191,5 @@ func isValidTerminal(s string) bool {
 	var rows, cols int
 	fmt.Sscanf(string(out), "%d %d", &rows, &cols)
 
-	return len(s)/8 >= cols
+	return maxlen >= cols
 }
