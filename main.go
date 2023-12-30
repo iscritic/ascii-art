@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	justify "ascii-art/banners"
 )
 
 var colors = map[string]string{
@@ -20,10 +22,11 @@ var colors = map[string]string{
 	"purple": "\033[35m",
 	"cyan":   "\033[36m",
 	"white":  "\033[37m",
-	"orange": "\033[38;5;208m",
 }
 
 func main() {
+	justify.AsciiJustify()
+	return
 	if len(os.Args) < 2 {
 		log.Fatalln("At least 2 arguments are required")
 	}
@@ -40,6 +43,8 @@ func main() {
 
 	output, maxlen := GetAscii(arg, data)
 
+	// os.WriteFile("outout.txt", []byte(output), 0666)
+
 	if isValidTerminal(maxlen) {
 		log.Fatalln("Invalid terminal size")
 	}
@@ -48,6 +53,7 @@ func main() {
 }
 
 func CreateMap(s string) map[rune][]string {
+	s = strings.ReplaceAll(s, "\r", "")
 	lines := strings.Split(s, "\n")
 
 	table := make(map[rune][]string)
@@ -149,7 +155,8 @@ func GetAscii(text, data string) (string, int) {
 
 	s := customSplit(text)
 
-	var result string
+	var result, subresult string
+	var maxlen int
 
 	for _, subs := range s {
 
@@ -161,19 +168,16 @@ func GetAscii(text, data string) (string, int) {
 		for i := 0; i < 8; i++ {
 			for _, char := range subs {
 				if art, ok := table[char]; ok {
-					result += art[i]
+					subresult += art[i]
 				}
 			}
-			result += "\n"
-		}
-	}
 
-	var maxlen int
-	arr := strings.Split(result, "\n")
+			if maxlen < len(subresult) {
+				maxlen = len(subresult)
+			}
 
-	for _, el := range arr {
-		if maxlen < len(el) {
-			maxlen = len(el)
+			result += subresult + "\n"
+			subresult = ""
 		}
 	}
 
@@ -191,5 +195,5 @@ func isValidTerminal(maxlen int) bool {
 	var rows, cols int
 	fmt.Sscanf(string(out), "%d %d", &rows, &cols)
 
-	return maxlen >= cols
+	return maxlen > cols
 }
