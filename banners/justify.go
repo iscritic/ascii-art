@@ -27,74 +27,13 @@ func AsciiJustify() {
 
 	output, maxlen := GetAscii(arg, data)
 
-	fmt.Print(output)
+	PrintAsciiArt(output)
 	fmt.Println(maxlen)
-
-	// os.WriteFile("outout.txt", []byte(output), 0666)
 
 	// cols, ok := isValidTerminal(maxlen)
 	// if ok {
 	// 	log.Fatalln("Invalid terminal size")
 	// }
-
-	// arr := strings.Split(output, "\n")
-
-	// // right
-
-	// for _, el := range arr {
-	// 	if el == "\n" {
-	// 		continue
-	// 	}
-	// 	spacesize := cols - len(el)
-	// 	for i := 0; i < spacesize; i++ {
-	// 		fmt.Print(" ")
-	// 	}
-	// 	fmt.Print(el)
-	// }
-
-	// // left
-
-	// for _, el := range arr {
-	// 	if el == "\n" {
-	// 		continue
-	// 	}
-	// 	spacesize := cols - len(el)
-	// 	fmt.Print(el)
-	// 	for i := 0; i < spacesize; i++ {
-	// 		fmt.Print(" ")
-	// 	}
-
-	// }
-
-	// // center
-
-	// for _, el := range arr {
-	// 	if el == "\n" {
-	// 		continue
-	// 	}
-	// 	spacesize := cols - len(el)
-	// 	leftSpace := spacesize / 2
-	// 	rightSpace := spacesize - leftSpace
-
-	// 	for i := 0; i < leftSpace; i++ {
-	// 		fmt.Print(" ")
-	// 	}
-
-	// 	fmt.Print(el)
-
-	// 	for i := 0; i < rightSpace; i++ {
-	// 		fmt.Print(" ")
-	// 	}
-
-	// }
-
-	// justify
-
-	arr := strings.Split(output, "\n")
-
-	for i := 0; i < len(arr); i++ {
-		fmt.Println(arr[i])
-	}
 }
 
 func CreateMap(s string) map[rune][]string {
@@ -192,52 +131,40 @@ func FontPicker() (string, error) {
 	return string(data), nil
 }
 
-func GetAscii(text, data string) (string, int) {
-	// Getting terminal size
-	cmd := exec.Command("stty", "size")
-	cmd.Stdin = os.Stdin
-	out, err := cmd.Output()
-	if err != nil {
-		log.Fatalln("Error getting size of terminal:", err)
-	}
+func GetAscii(text, data string) ([][]string, int) {
+	table := CreateMap(data)
 
-	var rows, cols int
-	fmt.Sscanf(string(out), "%d %d", &rows, &cols)
-
-	// Creating ASCII art
-	table := CreateMap(string(data))
 	text = strings.ReplaceAll(text, "\\n", "\n")
 	s := customSplit(text)
 
-	var result string
+	var superresult [][]string
 	var maxlen int
 
 	for _, subs := range s {
 		if subs == "\n" {
-			result += "\n"
+			superresult = append(superresult, []string{"\n"})
 			continue
 		}
 
-		var lineArt [8]string // Array to hold ASCII art for each line
-
-		for _, char := range subs {
-			if art, ok := table[char]; ok {
-				for i := 0; i < 8; i++ {
-					lineArt[i] += art[i] // Append ASCII art for each line
+		words := strings.Fields(subs)
+		for _, word := range words {
+			var wordArt []string
+			for i := 0; i < 8; i++ {
+				var line string
+				for _, char := range word {
+					if art, ok := table[char]; ok {
+						line += art[i]
+					}
+				}
+				wordArt = append(wordArt, line)
+				if len(line) > maxlen {
+					maxlen = len(line)
 				}
 			}
-		}
-
-		// Determine the length of the longest line
-		for _, line := range lineArt {
-			if len(line) > maxlen {
-				maxlen = len(line)
-			}
-			result += line + "\n"
+			superresult = append(superresult, wordArt)
 		}
 	}
-
-	return result, maxlen
+	return superresult, maxlen
 }
 
 func isValidTerminal(maxlen int) (int, bool) {
@@ -252,4 +179,17 @@ func isValidTerminal(maxlen int) (int, bool) {
 	fmt.Sscanf(string(out), "%d %d", &rows, &cols)
 
 	return cols, maxlen > cols
+}
+
+func PrintAsciiArt(superresult [][]string) {
+	for _, arr := range superresult {
+		if arr[0] == "\n" {
+			fmt.Println()
+			continue
+		}
+
+		for i := 0; i < 8; i++ {
+			fmt.Println(arr[i])
+		}
+	}
 }

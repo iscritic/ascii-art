@@ -1,0 +1,1 @@
+Error: Terminal size is too small for output
